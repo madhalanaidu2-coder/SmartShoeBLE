@@ -85,6 +85,14 @@
                 <div class="metric-value"><span id="impactValue">0</span><small id="impactUnit">%</small></div>
                 <div class="metric-footnote" id="impactCaption">Relative load</div>
               </article>
+              <article class="metric-card custom-card" id="customMonitorCard" hidden>
+                <div class="metric-topline">
+                  <span class="metric-label" id="customMonitorLabel">Custom monitor</span>
+                  <i data-lucide="radio"></i>
+                </div>
+                <div class="metric-value"><span id="customMonitorValue">--</span><small id="customMonitorUnit"></small></div>
+                <div class="metric-footnote">Custom sensor reading</div>
+              </article>
             </div>
 
             <div class="session-tools">
@@ -167,8 +175,15 @@
           <div><p class="micro-label">DEVICE CONFIGURATION</p><h2 id="settingsTitle">Sensor settings</h2></div>
           <button class="icon-button" id="closeSettings" type="button" aria-label="Close settings"><i data-lucide="x"></i></button>
         </div>
-        <p class="dialog-copy">Match these UUIDs and value formats to the shoe's BLE profile.</p>
+        <p class="dialog-copy">Save shoe details and match the sensor settings to its BLE profile.</p>
+        <div class="profile-toolbar">
+          <label class="field">Saved shoe profile<select id="profileSelect" aria-label="Saved shoe profile"></select></label>
+          <button class="text-button profile-add" id="addProfileButton" type="button"><i data-lucide="plus"></i> Add shoe</button>
+          <button class="text-button profile-delete" id="deleteProfileButton" type="button" aria-label="Delete selected shoe profile" title="Delete selected shoe profile"><i data-lucide="trash-2"></i></button>
+        </div>
         <div class="settings-grid">
+          <label class="field">Company / brand<input id="setting-companyName" name="companyName" autocomplete="organization" placeholder="e.g. Acme Athletics" required></label>
+          <label class="field">Shoe name<input id="setting-shoeName" name="shoeName" autocomplete="off" placeholder="e.g. Pace Insole" required></label>
           <label class="field field-wide">Primary service UUID<input id="setting-service" name="service" autocomplete="off" required></label>
           <label class="field">Heel pressure<input id="setting-heel" name="heel" autocomplete="off" required></label>
           <label class="field">Forefoot left<input id="setting-left" name="left" autocomplete="off" required></label>
@@ -178,6 +193,11 @@
           <label class="field">Battery level<input id="setting-battery" name="battery" autocomplete="off" required></label>
           <label class="field">Pressure encoding<select id="setting-encoding" name="encoding"><option value="uint16">Unsigned 16-bit LE</option><option value="uint8">Unsigned 8-bit</option><option value="float32">Float32 LE</option></select></label>
           <label class="field">Full-scale force <span class="field-optional">N / SENSOR</span><input id="setting-forceScale" name="forceScale" inputmode="decimal" placeholder="Leave blank for relative"></label>
+          <label class="field">Custom monitor name<input id="setting-customLabel" name="customLabel" autocomplete="off" placeholder="e.g. Temperature"></label>
+          <label class="field">Custom service UUID <span class="field-optional">OPTIONAL</span><input id="setting-customService" name="customService" autocomplete="off" placeholder="Uses primary service"></label>
+          <label class="field">Custom characteristic UUID<input id="setting-customUUID" name="customUUID" autocomplete="off" placeholder="Optional"></label>
+          <label class="field">Custom value format<select id="setting-customEncoding" name="customEncoding"><option value="uint16">Unsigned 16-bit LE</option><option value="uint8">Unsigned 8-bit</option><option value="int16">Signed 16-bit LE</option><option value="int32">Signed 32-bit LE</option><option value="float32">Float32 LE</option></select></label>
+          <label class="field">Custom unit<input id="setting-customUnit" name="customUnit" autocomplete="off" placeholder="e.g. °C, kPa"></label>
         </div>
         <p class="form-error" id="formError" role="alert"></p>
         <div class="dialog-actions">
