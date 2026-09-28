@@ -1,29 +1,23 @@
-# SmartShoeBLE
+# Stride / Shoe Monitor
 
-An iOS Swift module for connecting to BLE shoes or insole sensors, publishing live telemetry, and displaying a SwiftUI pressure dashboard. The implementation is in [SmartShoeBLE.swift](SmartShoeBLE.swift).
+A browser-based BLE dashboard for smart shoes and insole sensors. Open it in desktop Google Chrome or another supported Chromium browser; it uses Web Bluetooth and requires an HTTPS origin (GitHub Pages supplies HTTPS).
 
-## Integration
+## Connect a Shoe
 
-Add `SmartShoeBLE.swift` to an iOS app target that links CoreBluetooth, SwiftUI, and Combine. The dashboard uses `NavigationStack` and requires iOS 16 or later. Add `NSBluetoothAlwaysUsageDescription` to the app target's `Info.plist`, with a user-facing explanation of why the app uses Bluetooth. The containing app is responsible for this permission declaration.
+1. Open the deployed site in Chrome on the computer with the shoe nearby.
+2. Choose **Connect shoe** and select the shoe in Chrome's Bluetooth device picker.
+3. If the shoe uses different BLE UUIDs or encodings, open sensor settings and enter the vendor's values.
 
-Use `ShoeDashboardView()` as a screen, or create a `ShoeViewModel` and observe its connection status and telemetry. The central manager starts reconnecting to its saved peripheral identifier when Bluetooth becomes available. A first launch with no saved shoe waits for the user to scan.
+The browser can reconnect to a previously authorized device for this site. Bluetooth permissions are scoped to the browser and site origin. Chrome on iOS does not expose Web Bluetooth; use desktop Chrome or a supported Chromium browser.
 
-```swift
-let configuration = ShoeBLEConfiguration(
-    serviceUUID: CBUUID(string: "YOUR-SERVICE-UUID"),
-    heelPressureUUID: CBUUID(string: "YOUR-HEEL-UUID"),
-    forefootLeftPressureUUID: CBUUID(string: "YOUR-LEFT-UUID"),
-    forefootRightPressureUUID: CBUUID(string: "YOUR-RIGHT-UUID"),
-    cadenceUUID: CBUUID(string: "YOUR-CADENCE-UUID"),
-    pressureEncoding: .unsigned16LittleEndian
-)
-let model = ShoeViewModel(manager: ShoeBLEManager(configuration: configuration))
-```
+## BLE Profile
 
-## Sensor Protocol
+The defaults are service `180D`, pressure characteristics `A001` through `A003`, cadence characteristic `A004`, Battery Service `180F`, and Battery Level `2A19`. The pressure and cadence IDs are examples, not a standard shoe profile. The shoe must advertise the selected primary service and expose the configured characteristics with readable or notifiable values.
 
-The default service UUID is `180D`; this is the standard Heart Rate service UUID and is only suitable when the shoe advertises it. Pressure characteristic UUIDs `A001`–`A003` and cadence UUID `A004` are placeholders; configure the values published by your hardware. Battery uses the standard `2A19` characteristic.
+Pressure is decoded per characteristic as unsigned 16-bit little-endian by default, with unsigned 8-bit and float32 little-endian options. Integer pressure readings are normalized to `0...1`; float readings are clamped to that range. Cadence is decoded as an unsigned integer in steps per minute. Confirm UUIDs, endianness, scales, and packet framing against the shoe vendor's protocol. This app expects one reading per characteristic value and does not reassemble vendor-fragmented packets.
 
-Pressure notifications are decoded per characteristic as unsigned 8-bit, unsigned 16-bit little-endian, or IEEE-754 32-bit little-endian float according to `pressureEncoding`. Integer values are normalized across their full representable range; float values are clamped to `0...1`. Cadence is an unsigned integer in steps per minute (8-bit or 16-bit little-endian). Confirm byte order, scale, units, and packet framing against the shoe vendor's protocol before shipping. This implementation expects one sensor reading per characteristic value; it does not reassemble fragmented application-level packets.
+Ground impact is shown as relative load unless a vendor-supported force scale is configured. A displayed newton value is an estimate and should not be treated as a validated measurement.
 
-Ground impact is shown as relative load by default. Set `newtonsPerSensorAtFullScale` only with a vendor-supported calibration; the resulting value is a calibrated estimate, not a substitute for validated measurement.
+## Deploy
+
+GitHub Actions deploys the static app to GitHub Pages whenever `main` is updated. The site URL is `https://madhalanaidu2-coder.github.io/SmartShoeBLE/`. The Pages build uses the repository root; no build step or server is required.

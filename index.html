@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f3f5f1">
+    <meta name="description" content="Live BLE shoe pressure and gait dashboard.">
+    <title>Stride / Shoe Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="wordmark" href="./" aria-label="Stride home">
+          <span class="mark" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span>STRIDE<span class="wordmark-divider">/</span><span class="wordmark-light">SENSOR SYSTEM</span></span>
+        </a>
+        <div class="topbar-meta">
+          <span class="session-label">SESSION 01</span>
+          <button class="icon-button" id="settingsButton" type="button" aria-label="Sensor settings" title="Sensor settings">
+            <i data-lucide="sliders-horizontal"></i>
+          </button>
+        </div>
+      </header>
+
+      <main>
+        <div id="browserNotice" class="browser-notice" role="status" hidden></div>
+        <div class="dashboard-heading">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-rule"></span> GAIT ANALYSIS / LIVE FEED</p>
+            <h1>Shoe monitor<span class="heading-period">.</span></h1>
+          </div>
+          <div class="connection-summary" aria-live="polite">
+            <span class="connection-dot" id="connectionDot" data-state="disconnected"></span>
+            <div>
+              <div class="connection-state" id="connectionState">disconnected</div>
+              <div class="connection-message" id="connectionMessage">Ready to connect</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <section class="control-column" aria-label="Connection and live metrics">
+            <div class="device-row">
+              <div class="device-icon"><i data-lucide="bluetooth"></i></div>
+              <div class="device-copy">
+                <span class="micro-label">ACTIVE DEVICE</span>
+                <span class="device-name" id="deviceName">No shoe connected</span>
+              </div>
+              <div class="battery-reading" aria-label="Battery level">
+                <i id="batteryIcon" data-lucide="battery-warning"></i>
+                <span id="batteryValue">--</span>
+              </div>
+            </div>
+
+            <button class="connect-button" id="connectButton" type="button">
+              <i id="connectIcon" data-lucide="bluetooth"></i>
+              <span id="connectButtonText">Connect shoe</span>
+              <i class="button-arrow" data-lucide="arrow-up-right"></i>
+            </button>
+
+            <div class="metrics-heading">
+              <span class="micro-label">RUNNING METRICS</span>
+              <span class="live-indicator" id="activityLabel">Waiting for sensor data</span>
+            </div>
+            <div class="metric-grid">
+              <article class="metric-card cadence-card">
+                <div class="metric-topline">
+                  <span class="metric-label">Cadence</span>
+                  <i data-lucide="activity"></i>
+                </div>
+                <div class="metric-value"><span id="cadenceValue">--</span><small>SPM</small></div>
+                <div class="metric-footnote">Steps per minute</div>
+              </article>
+              <article class="metric-card impact-card">
+                <div class="metric-topline">
+                  <span class="metric-label">Ground impact force</span>
+                  <i data-lucide="zap"></i>
+                </div>
+                <div class="metric-value"><span id="impactValue">0</span><small id="impactUnit">%</small></div>
+                <div class="metric-footnote" id="impactCaption">Relative load</div>
+              </article>
+            </div>
+
+            <div class="session-tools">
+              <button class="text-button" id="demoButton" type="button" aria-pressed="false">
+                <i data-lucide="play"></i><span id="demoButtonText">Preview data</span>
+              </button>
+              <span class="data-note">SIMULATED / LOCAL ONLY</span>
+            </div>
+          </section>
+
+          <section class="sole-column" aria-labelledby="pressureHeading">
+            <div class="sole-heading">
+              <div>
+                <p class="micro-label">PLANTAR PRESSURE</p>
+                <h2 id="pressureHeading">Contact map</h2>
+              </div>
+              <div class="scale-legend" aria-label="Pressure scale from low to high">
+                <span>LOW</span><i></i><span>HIGH</span>
+              </div>
+            </div>
+
+            <div class="sole-stage">
+              <div class="sole-side-label sole-side-label-top"><span>01</span> FOREFOOT</div>
+              <div class="sole-side-label sole-side-label-bottom"><span>02</span> HEEL STRIKE</div>
+              <svg class="sole-art" viewBox="0 0 320 590" role="img" aria-labelledby="soleTitle soleDescription">
+                <title id="soleTitle">Live foot pressure heat map</title>
+                <desc id="soleDescription">Heel and left and right forefoot pressure regions, colored green to red by intensity.</desc>
+                <defs>
+                  <clipPath id="soleClip">
+                    <path d="M157 22 C122 17 96 43 78 79 C58 119 56 167 62 211 C66 245 73 275 68 307 C62 349 42 406 55 463 C65 509 103 555 151 570 C190 581 230 557 249 525 C272 487 269 448 262 410 C254 363 238 328 238 294 C238 257 258 225 266 184 C275 138 260 83 231 51 C211 29 183 20 157 22 Z" />
+                  </clipPath>
+                  <radialGradient id="heelGradient" cx="50%" cy="50%" r="50%">
+                    <stop class="heat-core" offset="0%" stop-color="#30be68" stop-opacity=".95" />
+                    <stop class="heat-mid" offset="48%" stop-color="#30be68" stop-opacity=".3" />
+                    <stop class="heat-glow" offset="100%" stop-color="#30be68" stop-opacity=".08" />
+                  </radialGradient>
+                  <radialGradient id="leftGradient" cx="50%" cy="50%" r="50%">
+                    <stop class="heat-core" offset="0%" stop-color="#30be68" stop-opacity=".95" />
+                    <stop class="heat-mid" offset="48%" stop-color="#30be68" stop-opacity=".3" />
+                    <stop class="heat-glow" offset="100%" stop-color="#30be68" stop-opacity=".08" />
+                  </radialGradient>
+                  <radialGradient id="rightGradient" cx="50%" cy="50%" r="50%">
+                    <stop class="heat-core" offset="0%" stop-color="#30be68" stop-opacity=".95" />
+                    <stop class="heat-mid" offset="48%" stop-color="#30be68" stop-opacity=".3" />
+                    <stop class="heat-glow" offset="100%" stop-color="#30be68" stop-opacity=".08" />
+                  </radialGradient>
+                </defs>
+                <path class="sole-base" d="M157 22 C122 17 96 43 78 79 C58 119 56 167 62 211 C66 245 73 275 68 307 C62 349 42 406 55 463 C65 509 103 555 151 570 C190 581 230 557 249 525 C272 487 269 448 262 410 C254 363 238 328 238 294 C238 257 258 225 266 184 C275 138 260 83 231 51 C211 29 183 20 157 22 Z" />
+                <g clip-path="url(#soleClip)">
+                  <path class="sole-seam" d="M72 284 C120 304 202 305 247 280" />
+                  <ellipse cx="155" cy="144" rx="82" ry="73" fill="url(#leftGradient)" />
+                  <ellipse cx="216" cy="171" rx="58" ry="83" fill="url(#rightGradient)" />
+                  <ellipse cx="160" cy="478" rx="92" ry="76" fill="url(#heelGradient)" />
+                </g>
+                <path class="sole-outline" d="M157 22 C122 17 96 43 78 79 C58 119 56 167 62 211 C66 245 73 275 68 307 C62 349 42 406 55 463 C65 509 103 555 151 570 C190 581 230 557 249 525 C272 487 269 448 262 410 C254 363 238 328 238 294 C238 257 258 225 266 184 C275 138 260 83 231 51 C211 29 183 20 157 22 Z" />
+                <g class="zone-reading">
+                  <text x="160" y="145" id="leftValue" class="zone-number" text-anchor="middle">0%</text>
+                  <text x="216" y="173" id="rightValue" class="zone-number" text-anchor="middle">0%</text>
+                  <text x="160" y="481" id="heelValue" class="zone-number" text-anchor="middle">0%</text>
+                </g>
+              </svg>
+              <div class="pressure-readout readout-left"><span>L / FORE</span><strong id="leftPercent">0%</strong></div>
+              <div class="pressure-readout readout-right"><span>R / FORE</span><strong id="rightPercent">0%</strong></div>
+              <div class="pressure-readout readout-heel"><span>HEEL</span><strong id="heelPercent">0%</strong></div>
+            </div>
+            <div class="sole-footnote"><span>LIVE PRESSURE INTENSITY</span><span>GREEN / LOW <b></b> RED / HIGH</span></div>
+          </section>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <span>STRIDE SYSTEMS <span class="footer-divider">/</span> BLE GAIT MONITOR</span>
+        <span>LOCAL SENSOR DATA</span>
+      </footer>
+    </div>
+
+    <dialog class="settings-dialog" id="settingsDialog" aria-labelledby="settingsTitle">
+      <form id="settingsForm">
+        <div class="dialog-heading">
+          <div><p class="micro-label">DEVICE CONFIGURATION</p><h2 id="settingsTitle">Sensor settings</h2></div>
+          <button class="icon-button" id="closeSettings" type="button" aria-label="Close settings"><i data-lucide="x"></i></button>
+        </div>
+        <p class="dialog-copy">Match these UUIDs and value formats to the shoe's BLE profile.</p>
+        <div class="settings-grid">
+          <label class="field field-wide">Primary service UUID<input id="setting-service" name="service" autocomplete="off" required></label>
+          <label class="field">Heel pressure<input id="setting-heel" name="heel" autocomplete="off" required></label>
+          <label class="field">Forefoot left<input id="setting-left" name="left" autocomplete="off" required></label>
+          <label class="field">Forefoot right<input id="setting-right" name="right" autocomplete="off" required></label>
+          <label class="field">Cadence <span class="field-optional">OPTIONAL</span><input id="setting-cadence" name="cadence" autocomplete="off"></label>
+          <label class="field">Battery service UUID<input id="setting-batteryService" name="batteryService" autocomplete="off" required></label>
+          <label class="field">Battery level<input id="setting-battery" name="battery" autocomplete="off" required></label>
+          <label class="field">Pressure encoding<select id="setting-encoding" name="encoding"><option value="uint16">Unsigned 16-bit LE</option><option value="uint8">Unsigned 8-bit</option><option value="float32">Float32 LE</option></select></label>
+          <label class="field">Full-scale force <span class="field-optional">N / SENSOR</span><input id="setting-forceScale" name="forceScale" inputmode="decimal" placeholder="Leave blank for relative"></label>
+        </div>
+        <p class="form-error" id="formError" role="alert"></p>
+        <div class="dialog-actions">
+          <button class="text-button" id="closeSettingsSecondary" type="button">Cancel</button>
+          <button class="save-button" type="submit">Apply settings <i data-lucide="arrow-right"></i></button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>
